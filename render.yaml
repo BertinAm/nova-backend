@@ -1,0 +1,42 @@
+# Render Blueprint for the NOVA backend.
+# Dashboard: New + -> Blueprint -> connect this repo. Render creates the
+# web service and the Postgres database and wires DATABASE_URL together.
+services:
+  - type: web
+    name: nova-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements-render.txt
+    # Migrations run at startup (free tier has no preDeploy hook).
+    startCommand: >
+      alembic upgrade head &&
+      gunicorn app.main:app -k uvicorn.workers.UvicornWorker
+      --workers 1 --bind 0.0.0.0:$PORT --timeout 60
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nova-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: EMBEDDING_ENCRYPTION_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: USE_LOCAL_VLM
+        value: "false"
+      - key: RATE_LIMIT_STORAGE_URI
+        value: memory://
+      - key: MODEL_STORAGE_PATH
+        value: /tmp/models
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+databases:
+  - name: nova-db
+    plan: free
+    databaseName: nova_db
+    user: nova_user
