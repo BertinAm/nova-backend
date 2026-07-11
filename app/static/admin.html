@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NOVA Admin Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1420; --panel: #161d2e; --panel2: #1c2438; --border: #2a3450;
+    --text: #e6e9f2; --muted: #8892ab; --accent: #4c8dff; --good: #33c17c;
+    --bad: #ef5b5b; --warn: #e0a63c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+  header {
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header .badge { font-size: 12px; color: var(--muted); }
+  #login-screen {
+    max-width: 380px; margin: 80px auto; padding: 28px;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  }
+  #login-screen h2 { margin-top: 0; font-size: 16px; }
+  #login-screen input {
+    width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--panel2); color: var(--text);
+  }
+  #login-screen button, .btn {
+    padding: 9px 14px; border-radius: 6px; border: none; background: var(--accent);
+    color: white; cursor: pointer; font-size: 13px; font-weight: 500;
+  }
+  .btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
+  .btn.danger { background: var(--bad); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #error-msg { color: var(--bad); font-size: 13px; min-height: 18px; }
+  main { display: none; padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
+  nav { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  nav button {
+    background: none; border: none; color: var(--muted); padding: 10px 16px;
+    cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent;
+  }
+  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+  .stat-card .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--panel2); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+  .panel h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 500; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .pill.ok { background: rgba(51,193,124,0.15); color: var(--good); }
+  .pill.bad { background: rgba(239,91,91,0.15); color: var(--bad); }
+  .pill.neutral { background: rgba(136,146,171,0.15); color: var(--muted); }
+  .row-actions { display: flex; gap: 6px; }
+  .row-actions button { padding: 4px 8px; font-size: 11px; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .toolbar input { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); flex: 1; max-width: 280px; }
+  .empty { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
+  #toast {
+    position: fixed; bottom: 20px; right: 20px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;
+    font-size: 13px; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 100px; }
+  .bar-chart .bar { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; position: relative; }
+  .bar-chart .bar:hover::after {
+    content: attr(data-label); position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%); background: var(--panel2); padding: 2px 6px;
+    border-radius: 4px; font-size: 11px; white-space: nowrap; margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <h2>NOVA Admin</h2>
+  <input id="login-email" type="email" placeholder="Operator email" autocomplete="username">
+  <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="btn" onclick="login()" style="width:100%">Sign in</button>
+  <div id="error-msg"></div>
+</div>
+
+<div id="toast"></div>
+
+<header id="app-header" style="display:none">
+  <h1>NOVA Admin Dashboard</h1>
+  <div>
+    <span class="badge" id="whoami"></span>
+    <button class="btn secondary" onclick="logout()" style="margin-left:10px">Sign out</button>
+  </div>
+</header>
+
+<main id="app-main">
+  <nav>
+    <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">Users</button>
+    <button class="tab-btn" data-tab="models" onclick="switchTab('models')">Model Registry</button>
+    <button class="tab-btn" data-tab="events" onclick="switchTab('events')">Activity</button>
+  </nav>
+
+  <div class="tab active" id="tab-overview">
+    <div class="stat-grid" id="stat-grid"></div>
+    <div class="panel">
+      <h3>Events per day (last 14 days)</h3>
+      <div class="bar-chart" id="daily-chart"></div>
+    </div>
+    <div class="panel">
+      <h3>Usage by module</h3>
+      <table id="module-table"><thead><tr>
+        <th>Module</th><th>Total</th><th>Success</th><th>Error</th>
+        <th>No detection</th><th>Low conf.</th><th>Avg conf.</th><th>Feedback (+/-)</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-users">
+    <div class="toolbar">
+      <input id="user-search" placeholder="Search by email..." oninput="debouncedLoadUsers()">
+      <button class="btn secondary" onclick="loadUsers()">Refresh</button>
+    </div>
+    <div class="panel" style="padding:0">
+      <table id="users-table"><thead><tr>
+        <th>Email</th><th>Lang</th><th>Status</th><th>Operator</th>
+        <th>Faces</th><th>Events</th><th>Emergency contact</th><th>Joined</th><th>Actions</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+    <div class="toolbar" style="justify-content:center">
+      <button class="btn secondary" onclick="changeUserPage(-1)">&larr; Prev</button>
+      <span id="user-page-label" style="color:var(--muted);font-size:13px"></span>
+      <button class="btn secondary" onclick="changeUserPage(1)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-models">
+    <div class="panel" style="padding:0">
+      <table id="models-table"><thead><tr>
+        <th>Module</th><th>Version</th><th>Filename</th><th>Checksum</th>
+        <th>Status</th><th>Uploaded</th><th>Notes</th><th>Actions</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <div class="tab" id="tab-events">
+    <div class="toolbar">
+      <button class="btn secondary" onclick="loadEvents()">Refresh</button>
+    </div>
+    <div class="panel" style="padding:0">
+      <table id="events-table"><thead><tr>
+        <th>Time</th><th>User</th><th>Module</th><th>Outcome</th>
+        <th>Confidence</th><th>Feedback</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</main>
+
+<script>
+const API = window.location.origin;
+let accessToken = localStorage.getItem('nova_admin_token') || null;
+let userPage = 1;
+let userSearchTimer = null;
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { ...(opts.headers || {}), 'Authorization': 'Bearer ' + accessToken },
+  });
+  if (res.status === 401) { logout(); throw new Error('Session expired'); }
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error?.message || body.detail || ('HTTP ' + res.status));
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+async function login() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('error-msg');
+  errEl.textContent = '';
+  try {
+    const form = new URLSearchParams({ username: email, password });
+    const res = await fetch(API + '/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form,
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const data = await res.json();
+    accessToken = data.access_token;
+    localStorage.setItem('nova_admin_token', accessToken);
+    await enterDashboard(email);
+  } catch (e) {
+    errEl.textContent = e.message.includes('operator') ? e.message : 'Login failed — check credentials.';
+  }
+}
+
+function logout() {
+  accessToken = null;
+  localStorage.removeItem('nova_admin_token');
+  document.getElementById('login-screen').style.display = 'block';
+  document.getElementById('app-header').style.display = 'none';
+  document.getElementById('app-main').style.display = 'none';
+}
+
+async function enterDashboard(email) {
+  try {
+    await api('/admin/stats');
+  } catch (e) {
+    document.getElementById('error-msg').textContent = 'This account is not an operator, or login failed.';
+    return;
+  }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-header').style.display = 'flex';
+  document.getElementById('app-main').style.display = 'block';
+  document.getElementById('whoami').textContent = email || '';
+  loadOverview();
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + name));
+  if (name === 'overview') loadOverview();
+  if (name === 'users') loadUsers();
+  if (name === 'models') loadModels();
+  if (name === 'events') loadEvents();
+}
+
+function statCard(label, value, sub = '') {
+  return `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+}
+
+async function loadOverview() {
+  const s = await api('/admin/stats');
+  document.getElementById('stat-grid').innerHTML = [
+    statCard('Total Users', s.total_users, `${s.active_users} active`),
+    statCard('Operators', s.operator_users),
+    statCard('Enrolled Faces', s.total_enrolled_faces),
+    statCard('Usage Events', s.total_usage_events, `${s.events_last_24h} in 24h`),
+    statCard('Events (7d)', s.events_last_7d),
+    statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : ''),
+    statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none'),
+  ].join('');
+
+  const daily = await api('/admin/stats/daily-events?days=14');
+  const max = Math.max(1, ...daily.map(d => d.count));
+  document.getElementById('daily-chart').innerHTML = daily.length
+    ? daily.map(d => `<div class="bar" style="height:${Math.max(2, d.count / max * 100)}%" data-label="${d.date}: ${d.count}"></div>`).join('')
+    : '<div class="empty">No events yet</div>';
+
+  const modStats = await api('/admin/stats/by-module');
+  const tbody = document.querySelector('#module-table tbody');
+  tbody.innerHTML = modStats.length ? modStats.map(m => `
+    <tr>
+      <td>${m.module_id}</td><td>${m.total_events}</td>
+      <td>${m.success_count}</td><td>${m.error_count}</td>
+      <td>${m.no_detection_count}</td><td>${m.low_confidence_count}</td>
+      <td>${m.avg_confidence != null ? m.avg_confidence.toFixed(3) : '—'}</td>
+      <td><span class="pill ok">${m.positive_feedback}</span> / <span class="pill bad">${m.negative_feedback}</span></td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No usage events yet</td></tr>';
+}
+
+function debouncedLoadUsers() {
+  clearTimeout(userSearchTimer);
+  userSearchTimer = setTimeout(() => { userPage = 1; loadUsers(); }, 350);
+}
+
+function changeUserPage(delta) {
+  userPage = Math.max(1, userPage + delta);
+  loadUsers();
+}
+
+async function loadUsers() {
+  const search = document.getElementById('user-search').value.trim();
+  const q = new URLSearchParams({ page: userPage, page_size: 25 });
+  if (search) q.set('search', search);
+  const data = await api('/admin/users?' + q.toString());
+  const tbody = document.querySelector('#users-table tbody');
+  tbody.innerHTML = data.users.length ? data.users.map(u => `
+    <tr>
+      <td>${u.email}</td><td>${u.preferred_language}</td>
+      <td><span class="pill ${u.is_active ? 'ok' : 'bad'}">${u.is_active ? 'active' : 'suspended'}</span></td>
+      <td><span class="pill ${u.is_operator ? 'ok' : 'neutral'}">${u.is_operator ? 'operator' : 'user'}</span></td>
+      <td>${u.enrolled_face_count}</td><td>${u.usage_event_count}</td>
+      <td>${u.has_emergency_contact ? 'yes' : 'no'}</td>
+      <td>${new Date(u.created_at).toLocaleDateString()}</td>
+      <td class="row-actions">
+        <button class="btn secondary" onclick="toggleOperator('${u.id}', ${!u.is_operator})">${u.is_operator ? 'Revoke op' : 'Make op'}</button>
+        <button class="btn ${u.is_active ? 'danger' : ''}" onclick="toggleActive('${u.id}', ${!u.is_active})">${u.is_active ? 'Suspend' : 'Reactivate'}</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="9" class="empty">No users found</td></tr>';
+  document.getElementById('user-page-label').textContent =
+    `Page ${data.page} — ${data.total} users total`;
+}
+
+async function toggleOperator(userId, makeOperator) {
+  try {
+    await api(`/admin/users/${userId}/operator`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_operator: makeOperator }),
+    });
+    toast(makeOperator ? 'Granted operator access' : 'Revoked operator access');
+    loadUsers();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+async function toggleActive(userId, makeActive) {
+  try {
+    await api(`/admin/users/${userId}/active`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: makeActive }),
+    });
+    toast(makeActive ? 'Account reactivated' : 'Account suspended');
+    loadUsers();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+async function loadModels() {
+  const models = await api('/admin/models');
+  const tbody = document.querySelector('#models-table tbody');
+  tbody.innerHTML = models.length ? models.map(m => `
+    <tr>
+      <td>${m.module_id}</td><td>${m.version}</td><td>${m.filename}</td>
+      <td title="${m.checksum}">${m.checksum.slice(0, 12)}...</td>
+      <td><span class="pill ${m.is_active ? 'ok' : 'neutral'}">${m.is_active ? 'active' : 'inactive'}</span></td>
+      <td>${new Date(m.uploaded_at).toLocaleDateString()}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${m.notes || ''}</td>
+      <td class="row-actions">
+        ${!m.is_active ? `<button class="btn secondary" onclick="activateModel('${m.id}')">Activate</button>` : ''}
+        ${!m.is_active ? `<button class="btn danger" onclick="deleteModel('${m.id}')">Delete</button>` : ''}
+      </td>
+    </tr>`).join('') : '<tr><td colspan="8" class="empty">No models registered yet</td></tr>';
+}
+
+async function activateModel(id) {
+  try {
+    await api(`/admin/models/${id}/activate`, { method: 'POST' });
+    toast('Model version activated');
+    loadModels();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+async function deleteModel(id) {
+  if (!confirm('Delete this model version from the registry?')) return;
+  try {
+    await api(`/admin/models/${id}`, { method: 'DELETE' });
+    toast('Model version deleted');
+    loadModels();
+  } catch (e) { toast('Failed: ' + e.message); }
+}
+
+async function loadEvents() {
+  const events = await api('/admin/events/recent?limit=100');
+  const tbody = document.querySelector('#events-table tbody');
+  tbody.innerHTML = events.length ? events.map(e => `
+    <tr>
+      <td>${new Date(e.event_timestamp).toLocaleString()}</td>
+      <td>${e.user_email || '<em>anonymous</em>'}</td>
+      <td>${e.module_id}</td>
+      <td><span class="pill ${e.outcome === 'success' ? 'ok' : (e.outcome === 'error' ? 'bad' : 'neutral')}">${e.outcome}</span></td>
+      <td>${e.confidence_score != null ? e.confidence_score.toFixed(3) : '—'}</td>
+      <td>${e.feedback_positive == null ? '—' : (e.feedback_positive ? '&#128077;' : '&#128078;')}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No events yet</td></tr>';
+}
+
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') login();
+});
+
+if (accessToken) enterDashboard(localStorage.getItem('nova_admin_email') || '');
+document.getElementById('login-email').addEventListener('change', e => {
+  localStorage.setItem('nova_admin_email', e.target.value);
+});
+</script>
+</body>
+</html>

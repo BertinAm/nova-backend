@@ -1,8 +1,11 @@
 """FastAPI application factory for the NOVA backend."""
 from contextlib import asynccontextmanager
 
+from pathlib import Path
+
 from fastapi import Depends, FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
@@ -15,7 +18,9 @@ from app.logging_config import configure_logging, get_logger
 from app.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.ml.scene_describer import SceneDescriber
 from app.rate_limit import limiter
-from app.routers import auth, emergency_contact, faces, logs, model_registry, scene
+from app.routers import admin, auth, emergency_contact, faces, logs, model_registry, scene
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 settings = get_settings()
 configure_logging()
@@ -63,6 +68,14 @@ def create_app() -> FastAPI:
     app.include_router(logs.router)
     app.include_router(model_registry.router)
     app.include_router(emergency_contact.router)
+    app.include_router(admin.router)
+
+    @app.get("/admin", tags=["Admin Dashboard"], include_in_schema=False)
+    async def admin_dashboard():
+        """Serves the operator dashboard SPA. The page itself calls the
+        JSON /admin/* API (all operator-gated) — this route serves static
+        HTML/JS only and requires no auth on its own."""
+        return FileResponse(STATIC_DIR / "admin.html")
 
     @app.get("/health", tags=["Health"])
     async def health(response: Response, db: AsyncSession = Depends(get_db)):
