@@ -1,11 +1,7 @@
 """OTA model registry: lookup, download, and upload of TFLite models."""
-import os
-
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import get_settings
 from app.database import get_db
 from app.dependencies import get_current_operator, get_current_user
 from app.models.user import User
@@ -13,7 +9,6 @@ from app.schemas.models import ModelRegisterResponse, ModelVersionResponse
 from app.services.model_service import ModelService
 
 router = APIRouter(prefix="/models", tags=["Model Registry"])
-settings = get_settings()
 
 VALID_MODULE_IDS = {"MOD-01", "MOD-04", "MOD-05-detect", "MOD-05-embed"}
 
@@ -62,18 +57,30 @@ async def download_model(
     _: User = Depends(get_current_user),
 ):
     """Stream the TFLite model file. The mobile app verifies the SHA-256
-    checksum (from /models/latest) before installing — FR-06-09."""
+    checksum (from /models/latest) before installing — FR-06-09.
+
+    Served straight from the file_data column, not local disk — Render's
+    free-tier filesystem is ephemeral and wiped on every restart/redeploy,
+    which previously caused this to 404 even though /models/latest
+    correctly reported the model as registered and active.
+    """
     from app.models.model_registry import ModelRegistry
 
     model = await db.get(ModelRegistry, model_id)
     if not model:
         raise HTTPException(404, "Model not found")
+    if not model.file_data:
+        raise HTTPException(
+            404,
+            "Model file not stored on server — this version was registered before "
+            "file persistence was fixed; re-register it via register_model_in_backend.py",
+        )
 
-    file_path = os.path.join(settings.MODEL_STORAGE_PATH, model.filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(404, "Model file not found on server")
-
-    return FileResponse(file_path, media_type="application/octet-stream", filename=model.filename)
+    return Response(
+        content=model.file_data,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{model.filename}"'},
+    )
 
 
 @router.post("/register", response_model=ModelRegisterResponse, status_code=201)
@@ -88,9 +95,11 @@ async def register_model(
     _: User = Depends(get_current_operator),
 ):
     """
-    Upload and register a new TFLite model version. Saves the file to
-    ``MODEL_STORAGE_PATH``, computes its SHA-256 checksum, and (by default)
-    deactivates any previously active model for the same module.
+    Upload and register a new TFLite model version. Computes its SHA-256
+    checksum and (by default) deactivates any previously active model for
+    the same module. The file bytes are stored in Postgres (see
+    ModelRegistry.file_data) rather than on disk, since Render's free-tier
+    filesystem does not survive a restart/redeploy.
 
     Restricted to operator/admin accounts (``User.is_operator``) — regular
     BVI user accounts cannot push new models.
@@ -103,10 +112,6 @@ async def register_model(
         raise HTTPException(400, "Uploaded file is empty")
 
     filename = f"{module_id}_{version}.tflite"
-    os.makedirs(settings.MODEL_STORAGE_PATH, exist_ok=True)
-    file_path = os.path.join(settings.MODEL_STORAGE_PATH, filename)
-    with open(file_path, "wb") as f:
-        f.write(file_bytes)
 
     service = ModelService(db)
     try:
@@ -120,7 +125,6 @@ async def register_model(
             activate=activate,
         )
     except Exception as exc:
-        os.remove(file_path)
         raise HTTPException(409, "Failed to register model (duplicate module/version?)") from exc
 
     await db.commit()

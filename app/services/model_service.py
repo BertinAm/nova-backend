@@ -49,6 +49,7 @@ class ModelService:
             hf_repo_url=hf_repo_url,
             notes=notes,
             is_active=activate,
+            file_data=file_bytes,
         )
         self.db.add(model)
         await self.db.flush()

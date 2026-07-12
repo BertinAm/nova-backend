@@ -56,6 +56,13 @@ async def test_register_model_allowed_for_operator(client: AsyncClient, db_sessi
         latest = await client.get("/models/latest/MOD-01")
         assert latest.status_code == 200
         assert latest.json()["hf_repo_url"] == "https://huggingface.co/nova/obstacle"
+
+        # Regression check: the file must round-trip from the DB (file_data
+        # column), not depend on the ephemeral local disk it used to be
+        # written to — that's what silently broke OTA downloads in prod.
+        download = await client.get(latest.json()["download_url"])
+        assert download.status_code == 200
+        assert download.content == b"fake-tflite-bytes"
     finally:
         app.dependency_overrides.pop(get_current_user, None)
 
