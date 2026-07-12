@@ -11,7 +11,7 @@ services:
     startCommand: >
       alembic upgrade head &&
       gunicorn app.main:app -k uvicorn.workers.UvicornWorker
-      --workers 1 --bind 0.0.0.0:$PORT --timeout 60
+      --workers 2 --bind 0.0.0.0:$PORT --timeout 60
     healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
@@ -26,8 +26,16 @@ services:
         value: production
       - key: USE_LOCAL_VLM
         value: "false"
+      # REDIS_URL and RATE_LIMIT_STORAGE_URI are set manually in the Render
+      # dashboard (Key Value instance connection string) — sync: false so
+      # a blueprint re-sync never overwrites the dashboard values with
+      # memory:// again. With workers > 1, memory:// would let each worker
+      # track an independent rate-limit quota, effectively multiplying the
+      # allowed request rate — Redis is required once workers > 1.
+      - key: REDIS_URL
+        sync: false
       - key: RATE_LIMIT_STORAGE_URI
-        value: memory://
+        sync: false
       - key: MODEL_STORAGE_PATH
         value: /tmp/models
       - key: CORS_ORIGINS
