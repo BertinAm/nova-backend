@@ -6,7 +6,7 @@
 <title>NOVA Admin Dashboard</title>
 <style>
   :root {
-    --bg: #060a14; --bg-grid: #0a0f1e;
+    --bg: #060a14;
     --panel: #0d1424; --panel2: #111a2e; --panel-hover: #141f38;
     --border: #1b2540; --border-soft: #161f38;
     --text: #eef1fa; --muted: #7c88a8; --muted2: #566083;
@@ -28,17 +28,16 @@
     -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; }
+  svg { display: block; }
 
   /* ── Login ─────────────────────────────────────────────────────── */
   #login-screen {
-    max-width: 400px; margin: 12vh auto; padding: 36px 32px;
+    max-width: 400px; margin: 12vh auto; padding: 36px 32px; width: calc(100% - 32px);
     background: linear-gradient(180deg, var(--panel2), var(--panel));
     border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 30px 60px -20px rgba(0,0,0,0.6);
   }
-  #login-screen .brand {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
-  }
+  #login-screen .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
   #login-screen .brand .dot {
     width: 34px; height: 34px; border-radius: 10px;
     background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent) 70%);
@@ -57,21 +56,33 @@
   #error-msg { color: var(--bad); font-size: 12.5px; min-height: 18px; margin-top: 10px; }
 
   .btn {
+    display: inline-flex; align-items: center; gap: 6px;
     padding: 9px 15px; border-radius: 9px; border: 1px solid transparent;
     background: linear-gradient(180deg, var(--accent2), var(--accent));
     color: #04101f; cursor: pointer; font-size: 12.5px; font-weight: 650;
     box-shadow: 0 6px 18px -8px var(--accent-glow);
     transition: transform .1s, box-shadow .15s, opacity .15s;
+    white-space: nowrap;
   }
   .btn:hover { box-shadow: 0 8px 22px -6px var(--accent-glow); }
   .btn:active { transform: translateY(1px); }
-  .btn.secondary {
-    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
-    box-shadow: none; font-weight: 550;
-  }
+  .btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); box-shadow: none; font-weight: 550; }
   .btn.secondary:hover { background: var(--panel-hover); }
   .btn.danger { background: linear-gradient(180deg, #ff8093, var(--bad)); color: #2a0410; box-shadow: 0 6px 16px -8px var(--bad-glow); }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+  .btn svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--muted); cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .icon-btn:hover { background: var(--panel-hover); color: var(--text); border-color: var(--accent); }
+  .icon-btn.danger:hover { color: var(--bad); border-color: var(--bad); }
+  .icon-btn.good:hover { color: var(--good); border-color: var(--good); }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
   /* ── Shell layout ──────────────────────────────────────────────── */
   #shell { display: none; min-height: 100vh; }
@@ -81,10 +92,11 @@
     width: 224px; flex-shrink: 0; padding: 22px 14px;
     border-right: 1px solid var(--border-soft);
     display: flex; flex-direction: column; gap: 4px;
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    transition: transform .2s ease;
+    z-index: 20;
   }
-  aside .brand {
-    display: flex; align-items: center; gap: 10px; padding: 4px 10px 26px;
-  }
+  aside .brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 26px; }
   aside .brand .dot {
     width: 30px; height: 30px; border-radius: 9px;
     background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent) 70%);
@@ -103,11 +115,12 @@
   .nav-btn.active { background: linear-gradient(90deg, var(--accent-glow), transparent); color: var(--text); }
   .nav-btn.active .ic { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
   aside .footer { margin-top: auto; padding: 10px 12px; font-size: 11px; color: var(--muted2); }
+  #nav-backdrop { display: none; }
 
   #content { flex: 1; min-width: 0; }
   header {
-    padding: 18px 28px; border-bottom: 1px solid var(--border-soft);
-    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
     position: sticky; top: 0; backdrop-filter: blur(10px);
     background: rgba(6,10,20,0.75); z-index: 5;
   }
@@ -117,17 +130,21 @@
     width: 30px; height: 30px; border-radius: 50%;
     background: linear-gradient(135deg, var(--accent2), var(--accent));
     display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: #04101f;
+    font-size: 12px; font-weight: 700; color: #04101f; flex-shrink: 0;
   }
   header .badge { font-size: 12.5px; color: var(--muted); }
+  #hamburger {
+    display: none; width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--text); cursor: pointer; align-items: center; justify-content: center;
+  }
 
-  main { padding: 24px 28px 48px; max-width: 1320px; margin: 0 auto; }
+  main { padding: 22px 28px 48px; max-width: 1360px; margin: 0 auto; }
   .tab { display: none; }
   .tab.active { display: block; animation: fadein .25s ease; }
   @keyframes fadein { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform:none; } }
 
   /* ── Stat cards ────────────────────────────────────────────────── */
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 22px; }
   .stat-card {
     background: linear-gradient(160deg, var(--panel2), var(--panel));
     border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 18px;
@@ -139,7 +156,13 @@
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
   }
+  .stat-card .top-row { display: flex; align-items: flex-start; justify-content: space-between; }
   .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .stat-card .icwrap {
+    width: 26px; height: 26px; border-radius: 7px; background: var(--accent-glow);
+    display: flex; align-items: center; justify-content: center; color: var(--accent2); flex-shrink: 0;
+  }
+  .stat-card .icwrap svg { width: 14px; height: 14px; }
   .stat-card .value { font-size: 26px; font-weight: 700; margin-top: 8px; letter-spacing: -0.01em; }
   .stat-card .sub { font-size: 12px; color: var(--muted2); margin-top: 4px; }
   .stat-card .sub.up { color: var(--good); }
@@ -148,20 +171,22 @@
   .panel {
     background: linear-gradient(160deg, var(--panel2), var(--panel));
     border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 20px; min-width: 0;
   }
-  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
   .panel h3 { margin: 0; font-size: 13.5px; color: var(--text); font-weight: 650; }
   .panel .hint { font-size: 11.5px; color: var(--muted2); }
-  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
-  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 980px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
   /* ── Table ─────────────────────────────────────────────────────── */
-  table { width: 100%; border-collapse: collapse; font-size: 12.8px; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.8px; min-width: 640px; }
   th {
     text-align: left; padding: 9px 12px; color: var(--muted2); font-weight: 600;
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft); white-space: nowrap;
   }
   td { padding: 11px 12px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
   tr:last-child td { border-bottom: none; }
@@ -169,58 +194,82 @@
 
   .pill {
     display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
-    border-radius: 20px; font-size: 10.8px; font-weight: 650; letter-spacing: 0.01em;
+    border-radius: 20px; font-size: 10.8px; font-weight: 650; letter-spacing: 0.01em; white-space: nowrap;
   }
   .pill.ok { background: var(--good-glow); color: var(--good); }
   .pill.bad { background: var(--bad-glow); color: var(--bad); }
   .pill.neutral { background: rgba(124,136,168,0.14); color: var(--muted); }
-  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
   .row-actions { display: flex; gap: 6px; }
-  .row-actions button { padding: 5px 10px; font-size: 11px; }
-  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
-  .toolbar input {
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+  .toolbar input, .toolbar select {
     padding: 9px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-    background: #0a0f1e; color: var(--text); flex: 1; max-width: 300px; font-size: 12.8px;
+    background: #0a0f1e; color: var(--text); font-size: 12.8px; font-family: inherit;
   }
-  .toolbar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .toolbar input { flex: 1; min-width: 160px; max-width: 300px; }
+  .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
   .empty { color: var(--muted2); font-size: 13px; padding: 32px; text-align: center; }
 
+  .pagination { display: flex; gap: 6px; align-items: center; justify-content: center; padding: 14px; flex-wrap: wrap; }
+  .pagination .pg-btn {
+    min-width: 30px; height: 30px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel2); color: var(--muted); font-size: 12px; cursor: pointer; font-weight: 600;
+  }
+  .pagination .pg-btn.active { background: linear-gradient(180deg, var(--accent2), var(--accent)); color: #04101f; border-color: transparent; }
+  .pagination .pg-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pagination .pg-info { font-size: 11.5px; color: var(--muted2); margin: 0 6px; }
+
   #toast {
-    position: fixed; bottom: 22px; right: 22px; background: var(--panel2);
+    position: fixed; bottom: 22px; right: 22px; left: 22px; background: var(--panel2);
     border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 18px;
     font-size: 12.8px; display: none; box-shadow: 0 12px 32px -8px rgba(0,0,0,0.55);
+    max-width: 340px; margin-left: auto;
   }
 
-  /* ── Charts (pure CSS/SVG, no deps) ───────────────────────────── */
-  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 120px; padding-top: 6px; }
-  .bar-chart .bar {
-    flex: 1; background: linear-gradient(180deg, var(--accent2), var(--accent));
-    border-radius: 4px 4px 0 0; min-height: 3px; position: relative;
-    box-shadow: 0 0 14px -4px var(--accent-glow);
-    transition: opacity .15s;
+  /* ── Charts ────────────────────────────────────────────────────── */
+  .chart-tooltip {
+    position: absolute; background: #0a0f1e; border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; font-size: 11px; pointer-events: none; white-space: nowrap; opacity: 0;
+    transform: translate(-50%, -110%); transition: opacity .1s; z-index: 3;
   }
-  .bar-chart .bar:hover { opacity: 0.85; }
-  .bar-chart .bar:hover::after {
-    content: attr(data-label); position: absolute; bottom: 100%; left: 50%;
-    transform: translateX(-50%); background: #0a0f1e; border: 1px solid var(--border);
-    padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; margin-bottom: 6px;
-  }
+  .chart-wrap { position: relative; }
 
-  .gauge-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; }
-  .gauge-val { font-size: 30px; font-weight: 750; margin-top: -64px; }
-  .gauge-label { font-size: 11.5px; color: var(--muted2); margin-top: 4px; }
-
-  .module-list { display: flex; flex-direction: column; gap: 10px; }
+  .module-list { display: flex; flex-direction: column; gap: 12px; }
   .module-row { display: flex; align-items: center; gap: 10px; }
-  .module-row .mid { width: 56px; font-size: 11.5px; color: var(--muted); font-weight: 650; flex-shrink: 0; }
+  .module-row .mid { width: 58px; font-size: 11.5px; color: var(--muted); font-weight: 650; flex-shrink: 0; }
   .module-row .track { flex: 1; height: 8px; border-radius: 6px; background: var(--panel2); overflow: hidden; }
-  .module-row .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .module-row .fill { height: 100%; border-radius: 6px; }
   .module-row .cnt { width: 34px; text-align: right; font-size: 11.5px; color: var(--muted); flex-shrink: 0; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 14px; justify-content: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ── Responsive: tablet & mobile ──────────────────────────────── */
+  @media (max-width: 860px) {
+    aside {
+      position: fixed; left: 0; top: 0; transform: translateX(-100%);
+      background: #070c18; box-shadow: 20px 0 60px rgba(0,0,0,0.5);
+    }
+    aside.open { transform: translateX(0); }
+    #nav-backdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 15; }
+    #hamburger { display: flex; }
+    main { padding: 18px 14px 40px; }
+    header { padding: 12px 14px; }
+    .toolbar input { max-width: none; }
+  }
+  @media (max-width: 520px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 13px; }
+    .stat-card .value { font-size: 20px; }
+    .panel { padding: 14px; }
+    #login-screen { padding: 26px 20px; margin: 8vh auto; }
+  }
 </style>
 </head>
 <body>
@@ -231,14 +280,15 @@
   <p class="sub">Manage users, models and live usage for the NOVA assistive platform.</p>
   <input id="login-email" type="email" placeholder="Operator email" autocomplete="username">
   <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
-  <button class="btn" onclick="login()">Sign in</button>
+  <button class="btn" onclick="login()" style="width:100%;justify-content:center">Sign in</button>
   <div id="error-msg"></div>
 </div>
 
 <div id="toast"></div>
+<div id="nav-backdrop" onclick="closeNav()"></div>
 
 <div id="shell">
-  <aside>
+  <aside id="sidebar">
     <div class="brand"><div class="dot"></div><span>NOVA</span></div>
     <div class="navlabel">Dashboard</div>
     <button class="nav-btn active" data-tab="overview" onclick="switchTab('overview')">
@@ -257,12 +307,17 @@
       <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
       Activity
     </button>
-    <div class="footer">NOVA Backend · Admin v1</div>
+    <div class="footer">NOVA Backend · Admin v2</div>
   </aside>
 
   <div id="content">
     <header>
-      <h1 id="page-title">Overview</h1>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button id="hamburger" onclick="toggleNav()">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <h1 id="page-title">Overview</h1>
+      </div>
       <div class="who">
         <span class="badge" id="whoami"></span>
         <div class="avatar" id="avatar">A</div>
@@ -276,59 +331,92 @@
         <div class="grid-2">
           <div class="panel">
             <div class="panel-head"><h3>Events per day</h3><span class="hint">last 14 days</span></div>
-            <div class="bar-chart" id="daily-chart"></div>
+            <div class="chart-wrap" id="daily-chart-wrap"></div>
           </div>
           <div class="panel">
-            <div class="panel-head"><h3>Usage by module</h3><span class="hint">share of total events</span></div>
+            <div class="panel-head"><h3>Usage by module</h3><span class="hint">share of total</span></div>
             <div class="module-list" id="module-bars"></div>
           </div>
         </div>
-        <div class="panel">
-          <div class="panel-head"><h3>Module detail</h3><span class="hint">outcomes &amp; feedback</span></div>
-          <table id="module-table"><thead><tr>
-            <th>Module</th><th>Total</th><th>Success</th><th>Error</th>
-            <th>No detection</th><th>Low conf.</th><th>Avg conf.</th><th>Feedback</th>
-          </tr></thead><tbody></tbody></table>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Module detail</h3><span class="hint">outcomes &amp; feedback</span></div>
+            <div class="table-scroll">
+              <table id="module-table"><thead><tr>
+                <th>Module</th><th>Total</th><th>Success</th><th>Error</th>
+                <th>No det.</th><th>Low conf.</th><th>Avg conf.</th><th>Feedback</th>
+              </tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Feedback split</h3><span class="hint">all-time</span></div>
+            <div class="chart-wrap" id="feedback-donut-wrap"></div>
+          </div>
         </div>
       </div>
 
       <div class="tab" id="tab-users">
         <div class="toolbar">
           <input id="user-search" placeholder="Search by email..." oninput="debouncedLoadUsers()">
-          <button class="btn secondary" onclick="loadUsers()">Refresh</button>
+          <button class="icon-btn" onclick="loadUsers()" title="Refresh">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+          </button>
         </div>
         <div class="panel" style="padding:0">
-          <table id="users-table"><thead><tr>
-            <th>Email</th><th>Lang</th><th>Status</th><th>Operator</th>
-            <th>Faces</th><th>Events</th><th>Emergency contact</th><th>Joined</th><th>Actions</th>
-          </tr></thead><tbody></tbody></table>
+          <div class="table-scroll">
+            <table id="users-table"><thead><tr>
+              <th>Email</th><th>Lang</th><th>Status</th><th>Operator</th>
+              <th>Faces</th><th>Events</th><th>Contact</th><th>Joined</th><th>Actions</th>
+            </tr></thead><tbody></tbody></table>
+          </div>
         </div>
-        <div class="toolbar" style="justify-content:center">
-          <button class="btn secondary" onclick="changeUserPage(-1)">&larr; Prev</button>
-          <span id="user-page-label" style="color:var(--muted);font-size:12.5px"></span>
-          <button class="btn secondary" onclick="changeUserPage(1)">Next &rarr;</button>
-        </div>
+        <div class="pagination" id="users-pagination"></div>
       </div>
 
       <div class="tab" id="tab-models">
-        <div class="panel" style="padding:0">
-          <table id="models-table"><thead><tr>
-            <th>Module</th><th>Version</th><th>Filename</th><th>Checksum</th>
-            <th>Status</th><th>Uploaded</th><th>Notes</th><th>Actions</th>
-          </tr></thead><tbody></tbody></table>
+        <div class="toolbar">
+          <span class="hint" id="models-count"></span>
+          <button class="icon-btn" onclick="loadModels()" title="Refresh" style="margin-left:auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+          </button>
         </div>
+        <div class="panel" style="padding:0">
+          <div class="table-scroll">
+            <table id="models-table"><thead><tr>
+              <th>Module</th><th>Version</th><th>Filename</th><th>Checksum</th>
+              <th>Status</th><th>Uploaded</th><th>Notes</th><th>Actions</th>
+            </tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+        <div class="pagination" id="models-pagination"></div>
       </div>
 
       <div class="tab" id="tab-events">
         <div class="toolbar">
-          <button class="btn secondary" onclick="loadEvents()">Refresh</button>
+          <select id="event-module-filter" onchange="renderEventsPage(1)">
+            <option value="">All modules</option>
+            <option value="MOD-01">MOD-01 Obstacle</option>
+            <option value="MOD-02">MOD-02 Text/OCR</option>
+            <option value="MOD-03">MOD-03 Scene</option>
+            <option value="MOD-04">MOD-04 Currency</option>
+            <option value="MOD-05">MOD-05 Face</option>
+          </select>
+          <button class="icon-btn" onclick="exportEventsCsv()" title="Export CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16"/></svg>
+          </button>
+          <button class="icon-btn" onclick="loadEvents()" title="Refresh" style="margin-left:auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>
+          </button>
         </div>
         <div class="panel" style="padding:0">
-          <table id="events-table"><thead><tr>
-            <th>Time</th><th>User</th><th>Module</th><th>Outcome</th>
-            <th>Confidence</th><th>Feedback</th>
-          </tr></thead><tbody></tbody></table>
+          <div class="table-scroll">
+            <table id="events-table"><thead><tr>
+              <th>Time</th><th>User</th><th>Module</th><th>Outcome</th>
+              <th>Confidence</th><th>Feedback</th>
+            </tr></thead><tbody></tbody></table>
+          </div>
         </div>
+        <div class="pagination" id="events-pagination"></div>
       </div>
     </main>
   </div>
@@ -340,12 +428,34 @@ let accessToken = localStorage.getItem('nova_admin_token') || null;
 let userPage = 1;
 let userSearchTimer = null;
 const TAB_TITLES = { overview: 'Overview', users: 'Users', models: 'Model Registry', events: 'Activity' };
+const MODULE_COLORS = { 'MOD-01': '#4c8dff', 'MOD-02': '#7ab8ff', 'MOD-03': '#35d68a', 'MOD-04': '#f5b551', 'MOD-05': '#ff5c7a' };
+const PAGE_SIZE = 10;
+let modelsData = [], modelsPage = 1;
+let eventsData = [], eventsPage = 1;
+
+const ICONS = {
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  activate: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>',
+  ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>',
+};
 
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.display = 'block';
   setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function toggleNav() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('nav-backdrop').classList.toggle('open');
+}
+function closeNav() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('nav-backdrop').classList.remove('open');
 }
 
 async function api(path, opts = {}) {
@@ -410,35 +520,125 @@ function switchTab(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + name));
   document.getElementById('page-title').textContent = TAB_TITLES[name] || name;
+  closeNav();
   if (name === 'overview') loadOverview();
   if (name === 'users') loadUsers();
   if (name === 'models') loadModels();
   if (name === 'events') loadEvents();
 }
 
-function statCard(label, value, sub = '', up = false) {
-  return `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div>${sub ? `<div class="sub${up ? ' up' : ''}">${sub}</div>` : ''}</div>`;
+function statCard(label, value, sub, up, icon) {
+  return `<div class="stat-card">
+    <div class="top-row"><div class="label">${label}</div><div class="icwrap">${icon}</div></div>
+    <div class="value">${value}</div>${sub ? `<div class="sub${up ? ' up' : ''}">${sub}</div>` : ''}
+  </div>`;
 }
 
-const MODULE_COLORS = { 'MOD-01': '#4c8dff', 'MOD-02': '#7ab8ff', 'MOD-03': '#35d68a', 'MOD-04': '#f5b551', 'MOD-05': '#ff5c7a' };
+const SI = {
+  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5"/></svg>',
+  shield: ICONS.shield,
+  face: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01M8.5 15c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5"/></svg>',
+  pulse: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>',
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
+  thumb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 22V11M2 13v7a2 2 0 0 0 2 2h12.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 18 11h-5l1-5a2 2 0 0 0-2-2.3L7 11"/></svg>',
+  box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/></svg>',
+};
+
+// ── SVG line/area chart ──────────────────────────────────────────
+function renderLineChart(containerId, points, opts = {}) {
+  const el = document.getElementById(containerId);
+  const w = 640, h = 200, pad = 28;
+  if (!points.length) { el.innerHTML = '<div class="empty">No events yet</div>'; return; }
+  const max = Math.max(1, ...points.map(p => p.value));
+  const stepX = (w - pad * 2) / Math.max(1, points.length - 1);
+  const coords = points.map((p, i) => ({
+    x: pad + i * stepX,
+    y: h - pad - (p.value / max) * (h - pad * 2),
+    ...p,
+  }));
+  const line = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c.x.toFixed(1) + ',' + c.y.toFixed(1)).join(' ');
+  const area = line + ` L${coords[coords.length - 1].x.toFixed(1)},${h - pad} L${coords[0].x.toFixed(1)},${h - pad} Z`;
+  const gridLines = [0.25, 0.5, 0.75, 1].map(f => {
+    const y = h - pad - f * (h - pad * 2);
+    return `<line x1="${pad}" y1="${y}" x2="${w - pad}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+  }).join('');
+  const dots = coords.map((c, i) => `<circle class="pt" data-i="${i}" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5" fill="var(--accent2)" stroke="#060a14" stroke-width="2" style="cursor:pointer"/>`).join('');
+  el.innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:200px" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--accent2)" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="var(--accent2)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      <path d="${area}" fill="url(#areaGrad)"/>
+      <path d="${line}" fill="none" stroke="var(--accent2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}
+    </svg>
+    <div class="chart-tooltip" id="${containerId}-tip"></div>`;
+  const tip = document.getElementById(containerId + '-tip');
+  const svgEl = el.querySelector('svg');
+  el.querySelectorAll('.pt').forEach(dot => {
+    dot.addEventListener('mouseenter', () => {
+      const c = coords[+dot.dataset.i];
+      const rect = svgEl.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const px = rect.left - elRect.left + (c.x / w) * rect.width;
+      const py = rect.top - elRect.top + (c.y / h) * rect.height;
+      tip.style.left = px + 'px'; tip.style.top = py + 'px';
+      tip.textContent = `${c.label}: ${c.value}`;
+      tip.style.opacity = '1';
+    });
+    dot.addEventListener('mouseleave', () => tip.style.opacity = '0');
+  });
+}
+
+// ── SVG donut chart ──────────────────────────────────────────────
+function renderDonut(containerId, segments, centerLabel) {
+  const el = document.getElementById(containerId);
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  if (!total) { el.innerHTML = '<div class="empty">No feedback yet</div>'; return; }
+  const size = 180, r = 70, cx = size / 2, cy = size / 2, sw = 22;
+  const circumference = 2 * Math.PI * r;
+  let offset = 0;
+  const arcs = segments.filter(s => s.value > 0).map(s => {
+    const frac = s.value / total;
+    const dash = frac * circumference;
+    const arc = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
+      stroke-dasharray="${dash.toFixed(2)} ${(circumference - dash).toFixed(2)}"
+      stroke-dashoffset="${(-offset).toFixed(2)}" stroke-linecap="butt" transform="rotate(-90 ${cx} ${cy})"/>`;
+    offset += dash;
+    return arc;
+  }).join('');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;position:relative">
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--panel2)" stroke-width="${sw}"/>
+        ${arcs}
+      </svg>
+      <div style="position:absolute;text-align:center">
+        <div style="font-size:22px;font-weight:750">${centerLabel}</div>
+        <div style="font-size:10.5px;color:var(--muted2)">positive</div>
+      </div>
+    </div>
+    <div class="legend">${segments.map(s => `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span>${s.name} (${s.value})</div>`).join('')}</div>`;
+}
 
 async function loadOverview() {
   const s = await api('/admin/stats');
   document.getElementById('stat-grid').innerHTML = [
-    statCard('Total Users', s.total_users, `${s.active_users} active`, true),
-    statCard('Operators', s.operator_users),
-    statCard('Enrolled Faces', s.total_enrolled_faces),
-    statCard('Usage Events', s.total_usage_events, `${s.events_last_24h} in 24h`, s.events_last_24h > 0),
-    statCard('Events (7d)', s.events_last_7d),
-    statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : 'no feedback yet', (s.positive_feedback_pct || 0) >= 50),
-    statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none registered'),
+    statCard('Total Users', s.total_users, `${s.active_users} active`, true, SI.users),
+    statCard('Operators', s.operator_users, '', false, SI.shield),
+    statCard('Enrolled Faces', s.total_enrolled_faces, '', false, SI.face),
+    statCard('Usage Events', s.total_usage_events, `${s.events_last_24h} in 24h`, s.events_last_24h > 0, SI.pulse),
+    statCard('Events (7d)', s.events_last_7d, '', false, SI.clock),
+    statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : 'none yet', (s.positive_feedback_pct || 0) >= 50, SI.thumb),
+    statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none registered', false, SI.box),
   ].join('');
 
   const daily = await api('/admin/stats/daily-events?days=14');
-  const max = Math.max(1, ...daily.map(d => d.count));
-  document.getElementById('daily-chart').innerHTML = daily.length
-    ? daily.map(d => `<div class="bar" style="height:${Math.max(2, d.count / max * 100)}%" data-label="${d.date}: ${d.count} events"></div>`).join('')
-    : '<div class="empty">No events yet</div>';
+  renderLineChart('daily-chart-wrap', daily.map(d => ({ label: d.date, value: d.count })));
 
   const modStats = await api('/admin/stats/by-module');
   const totalEvents = Math.max(1, modStats.reduce((a, m) => a + m.total_events, 0));
@@ -446,7 +646,7 @@ async function loadOverview() {
     ? modStats.map(m => `
       <div class="module-row">
         <div class="mid">${m.module_id}</div>
-        <div class="track"><div class="fill" style="width:${(m.total_events / totalEvents * 100).toFixed(1)}%;background:linear-gradient(90deg, ${MODULE_COLORS[m.module_id] || '#4c8dff'}, var(--accent2))"></div></div>
+        <div class="track"><div class="fill" style="width:${(m.total_events / totalEvents * 100).toFixed(1)}%;background:${MODULE_COLORS[m.module_id] || '#4c8dff'}"></div></div>
         <div class="cnt">${m.total_events}</div>
       </div>`).join('')
     : '<div class="empty">No usage events yet</div>';
@@ -460,6 +660,13 @@ async function loadOverview() {
       <td>${m.avg_confidence != null ? m.avg_confidence.toFixed(3) : '—'}</td>
       <td><span class="pill ok">${m.positive_feedback}</span> <span class="pill bad">${m.negative_feedback}</span></td>
     </tr>`).join('') : '<tr><td colspan="8" class="empty">No usage events yet</td></tr>';
+
+  const posTotal = modStats.reduce((a, m) => a + m.positive_feedback, 0);
+  const negTotal = modStats.reduce((a, m) => a + m.negative_feedback, 0);
+  const fbTotal = posTotal + negTotal;
+  renderDonut('feedback-donut-wrap',
+    [{ name: 'Positive', value: posTotal, color: 'var(--good)' }, { name: 'Negative', value: negTotal, color: 'var(--bad)' }],
+    fbTotal ? Math.round(posTotal / fbTotal * 100) + '%' : '—');
 }
 
 function debouncedLoadUsers() {
@@ -467,14 +674,24 @@ function debouncedLoadUsers() {
   userSearchTimer = setTimeout(() => { userPage = 1; loadUsers(); }, 350);
 }
 
-function changeUserPage(delta) {
-  userPage = Math.max(1, userPage + delta);
-  loadUsers();
+function renderPagination(containerId, page, totalPages, onPage) {
+  const el = document.getElementById(containerId);
+  if (totalPages <= 1) { el.innerHTML = ''; return; }
+  let html = `<button class="pg-btn" ${page <= 1 ? 'disabled' : ''} onclick="(${onPage})(${page - 1})">&larr;</button>`;
+  const nums = new Set([1, totalPages, page, page - 1, page + 1].filter(n => n >= 1 && n <= totalPages));
+  let prev = 0;
+  [...nums].sort((a, b) => a - b).forEach(n => {
+    if (prev && n - prev > 1) html += `<span class="pg-info">…</span>`;
+    html += `<button class="pg-btn ${n === page ? 'active' : ''}" onclick="(${onPage})(${n})">${n}</button>`;
+    prev = n;
+  });
+  html += `<button class="pg-btn" ${page >= totalPages ? 'disabled' : ''} onclick="(${onPage})(${page + 1})">&rarr;</button>`;
+  el.innerHTML = html;
 }
 
 async function loadUsers() {
   const search = document.getElementById('user-search').value.trim();
-  const q = new URLSearchParams({ page: userPage, page_size: 25 });
+  const q = new URLSearchParams({ page: userPage, page_size: PAGE_SIZE });
   if (search) q.set('search', search);
   const data = await api('/admin/users?' + q.toString());
   const tbody = document.querySelector('#users-table tbody');
@@ -487,13 +704,13 @@ async function loadUsers() {
       <td>${u.has_emergency_contact ? 'yes' : 'no'}</td>
       <td>${new Date(u.created_at).toLocaleDateString()}</td>
       <td class="row-actions">
-        <button class="btn secondary" onclick="toggleOperator('${u.id}', ${!u.is_operator})">${u.is_operator ? 'Revoke op' : 'Make op'}</button>
-        <button class="btn ${u.is_active ? 'danger' : ''}" onclick="toggleActive('${u.id}', ${!u.is_active})">${u.is_active ? 'Suspend' : 'Reactivate'}</button>
+        <button class="icon-btn ${u.is_operator ? 'danger' : 'good'}" title="${u.is_operator ? 'Revoke operator' : 'Make operator'}" onclick="toggleOperator('${u.id}', ${!u.is_operator})">${ICONS.shield}</button>
+        <button class="icon-btn ${u.is_active ? 'danger' : 'good'}" title="${u.is_active ? 'Suspend' : 'Reactivate'}" onclick="toggleActive('${u.id}', ${!u.is_active})">${u.is_active ? ICONS.ban : ICONS.check}</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="9" class="empty">No users found</td></tr>';
-  document.getElementById('user-page-label').textContent =
-    `Page ${data.page} — ${data.total} users total`;
+  renderPagination('users-pagination', data.page, Math.max(1, Math.ceil(data.total / PAGE_SIZE)), 'goUserPage');
 }
+function goUserPage(p) { userPage = p; loadUsers(); }
 
 async function toggleOperator(userId, makeOperator) {
   try {
@@ -518,20 +735,37 @@ async function toggleActive(userId, makeActive) {
 }
 
 async function loadModels() {
-  const models = await api('/admin/models');
+  modelsData = await api('/admin/models');
+  document.getElementById('models-count').textContent = `${modelsData.length} version${modelsData.length === 1 ? '' : 's'} registered`;
+  modelsPage = 1;
+  renderModelsPage(1);
+}
+
+function renderModelsPage(page) {
+  modelsPage = page;
+  const totalPages = Math.max(1, Math.ceil(modelsData.length / PAGE_SIZE));
+  const slice = modelsData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const tbody = document.querySelector('#models-table tbody');
-  tbody.innerHTML = models.length ? models.map(m => `
+  tbody.innerHTML = slice.length ? slice.map(m => `
     <tr>
       <td>${m.module_id}</td><td>${m.version}</td><td>${m.filename}</td>
-      <td title="${m.checksum}">${m.checksum.slice(0, 12)}...</td>
+      <td>
+        <span title="${m.checksum}">${m.checksum.slice(0, 10)}…</span>
+        <button class="icon-btn" style="width:22px;height:22px;margin-left:4px" title="Copy checksum" onclick="copyText('${m.checksum}')">${ICONS.copy}</button>
+      </td>
       <td><span class="pill ${m.is_active ? 'ok' : 'neutral'}">${m.is_active ? 'active' : 'inactive'}</span></td>
       <td>${new Date(m.uploaded_at).toLocaleDateString()}</td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${m.notes || ''}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${m.notes || ''}">${m.notes || ''}</td>
       <td class="row-actions">
-        ${!m.is_active ? `<button class="btn secondary" onclick="activateModel('${m.id}')">Activate</button>` : ''}
-        ${!m.is_active ? `<button class="btn danger" onclick="deleteModel('${m.id}')">Delete</button>` : ''}
+        <button class="icon-btn good" title="Activate" ${m.is_active ? 'disabled' : ''} onclick="activateModel('${m.id}')">${ICONS.activate}</button>
+        <button class="icon-btn danger" title="Delete" ${m.is_active ? 'disabled' : ''} onclick="deleteModel('${m.id}')">${ICONS.trash}</button>
       </td>
     </tr>`).join('') : '<tr><td colspan="8" class="empty">No models registered yet</td></tr>';
+  renderPagination('models-pagination', page, totalPages, 'renderModelsPage');
+}
+
+function copyText(text) {
+  navigator.clipboard?.writeText(text).then(() => toast('Checksum copied')).catch(() => toast('Copy failed'));
 }
 
 async function activateModel(id) {
@@ -552,9 +786,19 @@ async function deleteModel(id) {
 }
 
 async function loadEvents() {
-  const events = await api('/admin/events/recent?limit=100');
+  eventsData = await api('/admin/events/recent?limit=200');
+  eventsPage = 1;
+  renderEventsPage(1);
+}
+
+function renderEventsPage(page) {
+  eventsPage = page;
+  const filter = document.getElementById('event-module-filter').value;
+  const filtered = filter ? eventsData.filter(e => e.module_id === filter) : eventsData;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const tbody = document.querySelector('#events-table tbody');
-  tbody.innerHTML = events.length ? events.map(e => `
+  tbody.innerHTML = slice.length ? slice.map(e => `
     <tr>
       <td>${new Date(e.event_timestamp).toLocaleString()}</td>
       <td>${e.user_email || '<em>anonymous</em>'}</td>
@@ -562,7 +806,22 @@ async function loadEvents() {
       <td><span class="pill ${e.outcome === 'success' ? 'ok' : (e.outcome === 'error' ? 'bad' : 'neutral')}">${e.outcome}</span></td>
       <td>${e.confidence_score != null ? e.confidence_score.toFixed(3) : '—'}</td>
       <td>${e.feedback_positive == null ? '—' : (e.feedback_positive ? '&#128077;' : '&#128078;')}</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">No events yet</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">No events found</td></tr>';
+  renderPagination('events-pagination', page, totalPages, 'renderEventsPage');
+}
+
+function exportEventsCsv() {
+  if (!eventsData.length) { toast('Nothing to export'); return; }
+  const header = 'timestamp,user_email,module_id,outcome,confidence_score,feedback_positive\n';
+  const rows = eventsData.map(e => [
+    e.event_timestamp, e.user_email || '', e.module_id, e.outcome,
+    e.confidence_score ?? '', e.feedback_positive ?? '',
+  ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([header + rows], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'nova_events.csv';
+  a.click();
 }
 
 document.getElementById('login-password').addEventListener('keydown', e => {
