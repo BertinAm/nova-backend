@@ -6,171 +6,340 @@
 <title>NOVA Admin Dashboard</title>
 <style>
   :root {
-    --bg: #0f1420; --panel: #161d2e; --panel2: #1c2438; --border: #2a3450;
-    --text: #e6e9f2; --muted: #8892ab; --accent: #4c8dff; --good: #33c17c;
-    --bad: #ef5b5b; --warn: #e0a63c;
+    --bg: #060a14; --bg-grid: #0a0f1e;
+    --panel: #0d1424; --panel2: #111a2e; --panel-hover: #141f38;
+    --border: #1b2540; --border-soft: #161f38;
+    --text: #eef1fa; --muted: #7c88a8; --muted2: #566083;
+    --accent: #4c8dff; --accent2: #7ab8ff; --accent-glow: rgba(76,141,255,0.35);
+    --good: #35d68a; --good-glow: rgba(53,214,138,0.18);
+    --bad: #ff5c7a; --bad-glow: rgba(255,92,122,0.18);
+    --warn: #f5b551;
+    --radius: 14px; --radius-sm: 10px;
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg); color: var(--text); min-height: 100vh;
+    margin: 0;
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(76,141,255,0.14), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(122,184,255,0.08), transparent 55%),
+      var(--bg);
+    color: var(--text); min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
-  header {
-    padding: 16px 24px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
-  header .badge { font-size: 12px; color: var(--muted); }
+  a { color: inherit; }
+
+  /* ── Login ─────────────────────────────────────────────────────── */
   #login-screen {
-    max-width: 380px; margin: 80px auto; padding: 28px;
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    max-width: 400px; margin: 12vh auto; padding: 36px 32px;
+    background: linear-gradient(180deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 30px 60px -20px rgba(0,0,0,0.6);
   }
-  #login-screen h2 { margin-top: 0; font-size: 16px; }
+  #login-screen .brand {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
+  }
+  #login-screen .brand .dot {
+    width: 34px; height: 34px; border-radius: 10px;
+    background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent) 70%);
+    box-shadow: 0 0 22px var(--accent-glow);
+  }
+  #login-screen .brand span { font-weight: 700; font-size: 17px; letter-spacing: 0.01em; }
+  #login-screen h2 { margin: 0 0 4px; font-size: 20px; font-weight: 650; }
+  #login-screen p.sub { margin: 0 0 22px; font-size: 13px; color: var(--muted); }
   #login-screen input {
-    width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 6px;
-    border: 1px solid var(--border); background: var(--panel2); color: var(--text);
+    width: 100%; padding: 12px 14px; margin-bottom: 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: #0a0f1e; color: var(--text);
+    font-size: 13.5px; outline: none; transition: border-color .15s, box-shadow .15s;
   }
-  #login-screen button, .btn {
-    padding: 9px 14px; border-radius: 6px; border: none; background: var(--accent);
-    color: white; cursor: pointer; font-size: 13px; font-weight: 500;
+  #login-screen input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  #login-screen button.btn { width: 100%; padding: 12px; font-size: 13.5px; margin-top: 4px; }
+  #error-msg { color: var(--bad); font-size: 12.5px; min-height: 18px; margin-top: 10px; }
+
+  .btn {
+    padding: 9px 15px; border-radius: 9px; border: 1px solid transparent;
+    background: linear-gradient(180deg, var(--accent2), var(--accent));
+    color: #04101f; cursor: pointer; font-size: 12.5px; font-weight: 650;
+    box-shadow: 0 6px 18px -8px var(--accent-glow);
+    transition: transform .1s, box-shadow .15s, opacity .15s;
   }
-  .btn.secondary { background: var(--panel2); border: 1px solid var(--border); color: var(--text); }
-  .btn.danger { background: var(--bad); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  #error-msg { color: var(--bad); font-size: 13px; min-height: 18px; }
-  main { display: none; padding: 20px 24px; max-width: 1200px; margin: 0 auto; }
-  nav { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
-  nav button {
-    background: none; border: none; color: var(--muted); padding: 10px 16px;
-    cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent;
+  .btn:hover { box-shadow: 0 8px 22px -6px var(--accent-glow); }
+  .btn:active { transform: translateY(1px); }
+  .btn.secondary {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    box-shadow: none; font-weight: 550;
   }
-  nav button.active { color: var(--text); border-bottom-color: var(--accent); }
+  .btn.secondary:hover { background: var(--panel-hover); }
+  .btn.danger { background: linear-gradient(180deg, #ff8093, var(--bad)); color: #2a0410; box-shadow: 0 6px 16px -8px var(--bad-glow); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ── Shell layout ──────────────────────────────────────────────── */
+  #shell { display: none; min-height: 100vh; }
+  #shell.on { display: flex; }
+
+  aside {
+    width: 224px; flex-shrink: 0; padding: 22px 14px;
+    border-right: 1px solid var(--border-soft);
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  aside .brand {
+    display: flex; align-items: center; gap: 10px; padding: 4px 10px 26px;
+  }
+  aside .brand .dot {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: radial-gradient(circle at 30% 30%, var(--accent2), var(--accent) 70%);
+    box-shadow: 0 0 18px var(--accent-glow); flex-shrink: 0;
+  }
+  aside .brand span { font-weight: 700; font-size: 15px; }
+  aside .navlabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted2); padding: 14px 12px 6px; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    background: none; border: none; color: var(--muted); padding: 10px 12px;
+    cursor: pointer; font-size: 13px; font-weight: 550; border-radius: var(--radius-sm);
+    transition: background .15s, color .15s;
+  }
+  .nav-btn .ic { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.8; }
+  .nav-btn:hover { background: var(--panel2); color: var(--text); }
+  .nav-btn.active { background: linear-gradient(90deg, var(--accent-glow), transparent); color: var(--text); }
+  .nav-btn.active .ic { opacity: 1; filter: drop-shadow(0 0 6px var(--accent-glow)); }
+  aside .footer { margin-top: auto; padding: 10px 12px; font-size: 11px; color: var(--muted2); }
+
+  #content { flex: 1; min-width: 0; }
+  header {
+    padding: 18px 28px; border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; backdrop-filter: blur(10px);
+    background: rgba(6,10,20,0.75); z-index: 5;
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 650; letter-spacing: 0.01em; }
+  header .who { display: flex; align-items: center; gap: 12px; }
+  header .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #04101f;
+  }
+  header .badge { font-size: 12.5px; color: var(--muted); }
+
+  main { padding: 24px 28px 48px; max-width: 1320px; margin: 0 auto; }
   .tab { display: none; }
-  .tab.active { display: block; }
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .tab.active { display: block; animation: fadein .25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform:none; } }
+
+  /* ── Stat cards ────────────────────────────────────────────────── */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
   .stat-card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    background: linear-gradient(160deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 18px;
+    position: relative; overflow: hidden;
   }
-  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
-  .stat-card .value { font-size: 24px; font-weight: 600; margin-top: 4px; }
-  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
-  td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  tr:hover td { background: var(--panel2); }
-  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
-  .panel h3 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 500; }
-  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .pill.ok { background: rgba(51,193,124,0.15); color: var(--good); }
-  .pill.bad { background: rgba(239,91,91,0.15); color: var(--bad); }
-  .pill.neutral { background: rgba(136,146,171,0.15); color: var(--muted); }
+  .stat-card::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.06), transparent 40%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .stat-card .value { font-size: 26px; font-weight: 700; margin-top: 8px; letter-spacing: -0.01em; }
+  .stat-card .sub { font-size: 12px; color: var(--muted2); margin-top: 4px; }
+  .stat-card .sub.up { color: var(--good); }
+
+  /* ── Panels ────────────────────────────────────────────────────── */
+  .panel {
+    background: linear-gradient(160deg, var(--panel2), var(--panel));
+    border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 20px;
+    margin-bottom: 20px;
+  }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .panel h3 { margin: 0; font-size: 13.5px; color: var(--text); font-weight: 650; }
+  .panel .hint { font-size: 11.5px; color: var(--muted2); }
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ── Table ─────────────────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; font-size: 12.8px; }
+  th {
+    text-align: left; padding: 9px 12px; color: var(--muted2); font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  td { padding: 11px 12px; border-bottom: 1px solid var(--border-soft); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(76,141,255,0.045); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+    border-radius: 20px; font-size: 10.8px; font-weight: 650; letter-spacing: 0.01em;
+  }
+  .pill.ok { background: var(--good-glow); color: var(--good); }
+  .pill.bad { background: var(--bad-glow); color: var(--bad); }
+  .pill.neutral { background: rgba(124,136,168,0.14); color: var(--muted); }
+  .pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
   .row-actions { display: flex; gap: 6px; }
-  .row-actions button { padding: 4px 8px; font-size: 11px; }
-  .toolbar { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
-  .toolbar input { padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel2); color: var(--text); flex: 1; max-width: 280px; }
-  .empty { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
-  #toast {
-    position: fixed; bottom: 20px; right: 20px; background: var(--panel2);
-    border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px;
-    font-size: 13px; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  .row-actions button { padding: 5px 10px; font-size: 11px; }
+  .toolbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
+  .toolbar input {
+    padding: 9px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: #0a0f1e; color: var(--text); flex: 1; max-width: 300px; font-size: 12.8px;
   }
-  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 100px; }
-  .bar-chart .bar { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; position: relative; }
+  .toolbar input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .empty { color: var(--muted2); font-size: 13px; padding: 32px; text-align: center; }
+
+  #toast {
+    position: fixed; bottom: 22px; right: 22px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 11px 18px;
+    font-size: 12.8px; display: none; box-shadow: 0 12px 32px -8px rgba(0,0,0,0.55);
+  }
+
+  /* ── Charts (pure CSS/SVG, no deps) ───────────────────────────── */
+  .bar-chart { display: flex; align-items: flex-end; gap: 5px; height: 120px; padding-top: 6px; }
+  .bar-chart .bar {
+    flex: 1; background: linear-gradient(180deg, var(--accent2), var(--accent));
+    border-radius: 4px 4px 0 0; min-height: 3px; position: relative;
+    box-shadow: 0 0 14px -4px var(--accent-glow);
+    transition: opacity .15s;
+  }
+  .bar-chart .bar:hover { opacity: 0.85; }
   .bar-chart .bar:hover::after {
     content: attr(data-label); position: absolute; bottom: 100%; left: 50%;
-    transform: translateX(-50%); background: var(--panel2); padding: 2px 6px;
-    border-radius: 4px; font-size: 11px; white-space: nowrap; margin-bottom: 4px;
+    transform: translateX(-50%); background: #0a0f1e; border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 6px; font-size: 11px; white-space: nowrap; margin-bottom: 6px;
   }
+
+  .gauge-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; }
+  .gauge-val { font-size: 30px; font-weight: 750; margin-top: -64px; }
+  .gauge-label { font-size: 11.5px; color: var(--muted2); margin-top: 4px; }
+
+  .module-list { display: flex; flex-direction: column; gap: 10px; }
+  .module-row { display: flex; align-items: center; gap: 10px; }
+  .module-row .mid { width: 56px; font-size: 11.5px; color: var(--muted); font-weight: 650; flex-shrink: 0; }
+  .module-row .track { flex: 1; height: 8px; border-radius: 6px; background: var(--panel2); overflow: hidden; }
+  .module-row .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .module-row .cnt { width: 34px; text-align: right; font-size: 11.5px; color: var(--muted); flex-shrink: 0; }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
 </style>
 </head>
 <body>
 
 <div id="login-screen">
-  <h2>NOVA Admin</h2>
+  <div class="brand"><div class="dot"></div><span>NOVA</span></div>
+  <h2>Operator sign in</h2>
+  <p class="sub">Manage users, models and live usage for the NOVA assistive platform.</p>
   <input id="login-email" type="email" placeholder="Operator email" autocomplete="username">
   <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
-  <button class="btn" onclick="login()" style="width:100%">Sign in</button>
+  <button class="btn" onclick="login()">Sign in</button>
   <div id="error-msg"></div>
 </div>
 
 <div id="toast"></div>
 
-<header id="app-header" style="display:none">
-  <h1>NOVA Admin Dashboard</h1>
-  <div>
-    <span class="badge" id="whoami"></span>
-    <button class="btn secondary" onclick="logout()" style="margin-left:10px">Sign out</button>
-  </div>
-</header>
+<div id="shell">
+  <aside>
+    <div class="brand"><div class="dot"></div><span>NOVA</span></div>
+    <div class="navlabel">Dashboard</div>
+    <button class="nav-btn active" data-tab="overview" onclick="switchTab('overview')">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Overview
+    </button>
+    <button class="nav-btn" data-tab="users" onclick="switchTab('users')">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.7 14.2c2.6.3 4.6 2.5 4.8 5.3"/></svg>
+      Users
+    </button>
+    <button class="nav-btn" data-tab="models" onclick="switchTab('models')">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4.5 7.5L12 12l7.5-4.5M12 12v9"/></svg>
+      Model Registry
+    </button>
+    <button class="nav-btn" data-tab="events" onclick="switchTab('events')">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+      Activity
+    </button>
+    <div class="footer">NOVA Backend · Admin v1</div>
+  </aside>
 
-<main id="app-main">
-  <nav>
-    <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
-    <button class="tab-btn" data-tab="users" onclick="switchTab('users')">Users</button>
-    <button class="tab-btn" data-tab="models" onclick="switchTab('models')">Model Registry</button>
-    <button class="tab-btn" data-tab="events" onclick="switchTab('events')">Activity</button>
-  </nav>
+  <div id="content">
+    <header>
+      <h1 id="page-title">Overview</h1>
+      <div class="who">
+        <span class="badge" id="whoami"></span>
+        <div class="avatar" id="avatar">A</div>
+        <button class="btn secondary" onclick="logout()">Sign out</button>
+      </div>
+    </header>
 
-  <div class="tab active" id="tab-overview">
-    <div class="stat-grid" id="stat-grid"></div>
-    <div class="panel">
-      <h3>Events per day (last 14 days)</h3>
-      <div class="bar-chart" id="daily-chart"></div>
-    </div>
-    <div class="panel">
-      <h3>Usage by module</h3>
-      <table id="module-table"><thead><tr>
-        <th>Module</th><th>Total</th><th>Success</th><th>Error</th>
-        <th>No detection</th><th>Low conf.</th><th>Avg conf.</th><th>Feedback (+/-)</th>
-      </tr></thead><tbody></tbody></table>
-    </div>
-  </div>
+    <main>
+      <div class="tab active" id="tab-overview">
+        <div class="stat-grid" id="stat-grid"></div>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head"><h3>Events per day</h3><span class="hint">last 14 days</span></div>
+            <div class="bar-chart" id="daily-chart"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Usage by module</h3><span class="hint">share of total events</span></div>
+            <div class="module-list" id="module-bars"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Module detail</h3><span class="hint">outcomes &amp; feedback</span></div>
+          <table id="module-table"><thead><tr>
+            <th>Module</th><th>Total</th><th>Success</th><th>Error</th>
+            <th>No detection</th><th>Low conf.</th><th>Avg conf.</th><th>Feedback</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+      </div>
 
-  <div class="tab" id="tab-users">
-    <div class="toolbar">
-      <input id="user-search" placeholder="Search by email..." oninput="debouncedLoadUsers()">
-      <button class="btn secondary" onclick="loadUsers()">Refresh</button>
-    </div>
-    <div class="panel" style="padding:0">
-      <table id="users-table"><thead><tr>
-        <th>Email</th><th>Lang</th><th>Status</th><th>Operator</th>
-        <th>Faces</th><th>Events</th><th>Emergency contact</th><th>Joined</th><th>Actions</th>
-      </tr></thead><tbody></tbody></table>
-    </div>
-    <div class="toolbar" style="justify-content:center">
-      <button class="btn secondary" onclick="changeUserPage(-1)">&larr; Prev</button>
-      <span id="user-page-label" style="color:var(--muted);font-size:13px"></span>
-      <button class="btn secondary" onclick="changeUserPage(1)">Next &rarr;</button>
-    </div>
-  </div>
+      <div class="tab" id="tab-users">
+        <div class="toolbar">
+          <input id="user-search" placeholder="Search by email..." oninput="debouncedLoadUsers()">
+          <button class="btn secondary" onclick="loadUsers()">Refresh</button>
+        </div>
+        <div class="panel" style="padding:0">
+          <table id="users-table"><thead><tr>
+            <th>Email</th><th>Lang</th><th>Status</th><th>Operator</th>
+            <th>Faces</th><th>Events</th><th>Emergency contact</th><th>Joined</th><th>Actions</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+        <div class="toolbar" style="justify-content:center">
+          <button class="btn secondary" onclick="changeUserPage(-1)">&larr; Prev</button>
+          <span id="user-page-label" style="color:var(--muted);font-size:12.5px"></span>
+          <button class="btn secondary" onclick="changeUserPage(1)">Next &rarr;</button>
+        </div>
+      </div>
 
-  <div class="tab" id="tab-models">
-    <div class="panel" style="padding:0">
-      <table id="models-table"><thead><tr>
-        <th>Module</th><th>Version</th><th>Filename</th><th>Checksum</th>
-        <th>Status</th><th>Uploaded</th><th>Notes</th><th>Actions</th>
-      </tr></thead><tbody></tbody></table>
-    </div>
-  </div>
+      <div class="tab" id="tab-models">
+        <div class="panel" style="padding:0">
+          <table id="models-table"><thead><tr>
+            <th>Module</th><th>Version</th><th>Filename</th><th>Checksum</th>
+            <th>Status</th><th>Uploaded</th><th>Notes</th><th>Actions</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+      </div>
 
-  <div class="tab" id="tab-events">
-    <div class="toolbar">
-      <button class="btn secondary" onclick="loadEvents()">Refresh</button>
-    </div>
-    <div class="panel" style="padding:0">
-      <table id="events-table"><thead><tr>
-        <th>Time</th><th>User</th><th>Module</th><th>Outcome</th>
-        <th>Confidence</th><th>Feedback</th>
-      </tr></thead><tbody></tbody></table>
-    </div>
+      <div class="tab" id="tab-events">
+        <div class="toolbar">
+          <button class="btn secondary" onclick="loadEvents()">Refresh</button>
+        </div>
+        <div class="panel" style="padding:0">
+          <table id="events-table"><thead><tr>
+            <th>Time</th><th>User</th><th>Module</th><th>Outcome</th>
+            <th>Confidence</th><th>Feedback</th>
+          </tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </main>
   </div>
-</main>
+</div>
 
 <script>
 const API = window.location.origin;
 let accessToken = localStorage.getItem('nova_admin_token') || null;
 let userPage = 1;
 let userSearchTimer = null;
+const TAB_TITLES = { overview: 'Overview', users: 'Users', models: 'Model Registry', events: 'Activity' };
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -209,6 +378,7 @@ async function login() {
     const data = await res.json();
     accessToken = data.access_token;
     localStorage.setItem('nova_admin_token', accessToken);
+    localStorage.setItem('nova_admin_email', email);
     await enterDashboard(email);
   } catch (e) {
     errEl.textContent = e.message.includes('operator') ? e.message : 'Login failed — check credentials.';
@@ -219,8 +389,7 @@ function logout() {
   accessToken = null;
   localStorage.removeItem('nova_admin_token');
   document.getElementById('login-screen').style.display = 'block';
-  document.getElementById('app-header').style.display = 'none';
-  document.getElementById('app-main').style.display = 'none';
+  document.getElementById('shell').classList.remove('on');
 }
 
 async function enterDashboard(email) {
@@ -231,44 +400,57 @@ async function enterDashboard(email) {
     return;
   }
   document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-header').style.display = 'flex';
-  document.getElementById('app-main').style.display = 'block';
+  document.getElementById('shell').classList.add('on');
   document.getElementById('whoami').textContent = email || '';
+  document.getElementById('avatar').textContent = (email || 'A').charAt(0).toUpperCase();
   loadOverview();
 }
 
 function switchTab(name) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + name));
+  document.getElementById('page-title').textContent = TAB_TITLES[name] || name;
   if (name === 'overview') loadOverview();
   if (name === 'users') loadUsers();
   if (name === 'models') loadModels();
   if (name === 'events') loadEvents();
 }
 
-function statCard(label, value, sub = '') {
-  return `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+function statCard(label, value, sub = '', up = false) {
+  return `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div>${sub ? `<div class="sub${up ? ' up' : ''}">${sub}</div>` : ''}</div>`;
 }
+
+const MODULE_COLORS = { 'MOD-01': '#4c8dff', 'MOD-02': '#7ab8ff', 'MOD-03': '#35d68a', 'MOD-04': '#f5b551', 'MOD-05': '#ff5c7a' };
 
 async function loadOverview() {
   const s = await api('/admin/stats');
   document.getElementById('stat-grid').innerHTML = [
-    statCard('Total Users', s.total_users, `${s.active_users} active`),
+    statCard('Total Users', s.total_users, `${s.active_users} active`, true),
     statCard('Operators', s.operator_users),
     statCard('Enrolled Faces', s.total_enrolled_faces),
-    statCard('Usage Events', s.total_usage_events, `${s.events_last_24h} in 24h`),
+    statCard('Usage Events', s.total_usage_events, `${s.events_last_24h} in 24h`, s.events_last_24h > 0),
     statCard('Events (7d)', s.events_last_7d),
-    statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : ''),
-    statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none'),
+    statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : 'no feedback yet', (s.positive_feedback_pct || 0) >= 50),
+    statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none registered'),
   ].join('');
 
   const daily = await api('/admin/stats/daily-events?days=14');
   const max = Math.max(1, ...daily.map(d => d.count));
   document.getElementById('daily-chart').innerHTML = daily.length
-    ? daily.map(d => `<div class="bar" style="height:${Math.max(2, d.count / max * 100)}%" data-label="${d.date}: ${d.count}"></div>`).join('')
+    ? daily.map(d => `<div class="bar" style="height:${Math.max(2, d.count / max * 100)}%" data-label="${d.date}: ${d.count} events"></div>`).join('')
     : '<div class="empty">No events yet</div>';
 
   const modStats = await api('/admin/stats/by-module');
+  const totalEvents = Math.max(1, modStats.reduce((a, m) => a + m.total_events, 0));
+  document.getElementById('module-bars').innerHTML = modStats.length
+    ? modStats.map(m => `
+      <div class="module-row">
+        <div class="mid">${m.module_id}</div>
+        <div class="track"><div class="fill" style="width:${(m.total_events / totalEvents * 100).toFixed(1)}%;background:linear-gradient(90deg, ${MODULE_COLORS[m.module_id] || '#4c8dff'}, var(--accent2))"></div></div>
+        <div class="cnt">${m.total_events}</div>
+      </div>`).join('')
+    : '<div class="empty">No usage events yet</div>';
+
   const tbody = document.querySelector('#module-table tbody');
   tbody.innerHTML = modStats.length ? modStats.map(m => `
     <tr>
@@ -276,7 +458,7 @@ async function loadOverview() {
       <td>${m.success_count}</td><td>${m.error_count}</td>
       <td>${m.no_detection_count}</td><td>${m.low_confidence_count}</td>
       <td>${m.avg_confidence != null ? m.avg_confidence.toFixed(3) : '—'}</td>
-      <td><span class="pill ok">${m.positive_feedback}</span> / <span class="pill bad">${m.negative_feedback}</span></td>
+      <td><span class="pill ok">${m.positive_feedback}</span> <span class="pill bad">${m.negative_feedback}</span></td>
     </tr>`).join('') : '<tr><td colspan="8" class="empty">No usage events yet</td></tr>';
 }
 
@@ -386,11 +568,11 @@ async function loadEvents() {
 document.getElementById('login-password').addEventListener('keydown', e => {
   if (e.key === 'Enter') login();
 });
-
-if (accessToken) enterDashboard(localStorage.getItem('nova_admin_email') || '');
 document.getElementById('login-email').addEventListener('change', e => {
   localStorage.setItem('nova_admin_email', e.target.value);
 });
+
+if (accessToken) enterDashboard(localStorage.getItem('nova_admin_email') || '');
 </script>
 </body>
 </html>

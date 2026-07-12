@@ -39,7 +39,10 @@ router = APIRouter(
 # ── Overview ────────────────────────────────────────────────────────────
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
-    now = datetime.now(timezone.utc)
+    # event_timestamp is stored as a naive DateTime column (UTC implied);
+    # asyncpg rejects binding a tz-aware datetime against it, so drop the
+    # tzinfo after computing the cutoff in UTC.
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     day_ago = now - timedelta(hours=24)
     week_ago = now - timedelta(days=7)
 
@@ -139,7 +142,7 @@ async def get_module_usage_stats(db: AsyncSession = Depends(get_db)):
 @router.get("/stats/daily-events", response_model=list[DailyEventCount])
 async def get_daily_event_counts(days: int = 14, db: AsyncSession = Depends(get_db)):
     """Event volume per day for the last N days — feeds the dashboard chart."""
-    since = datetime.now(timezone.utc) - timedelta(days=days)
+    since = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days)
     day_expr = func.date(UsageEvent.event_timestamp)
     rows = (
         await db.execute(
