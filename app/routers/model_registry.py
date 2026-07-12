@@ -24,7 +24,23 @@ async def get_latest_model(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
-    """Return metadata for the latest active model for a module (FR-06-07)."""
+    """Return metadata for the latest active model for a module (FR-06-07).
+
+    "MOD-05" alone means face embedding to every caller outside this
+    codebase — the split into MOD-05-detect/MOD-05-embed is an internal
+    registry detail. Treat a bare "MOD-05" request as MOD-05-embed so a
+    client doesn't need to know that split to get the right model.
+    """
+    if module_id == "MOD-05":
+        module_id = "MOD-05-embed"
+    if module_id == "MOD-05-detect":
+        raise HTTPException(
+            404,
+            "MOD-05-detect has no backend model — face detection uses a stock "
+            "bundled model (e.g. MediaPipe BlazeFace) on-device, not an OTA "
+            "download. Request MOD-05-embed for the face embedding model.",
+        )
+
     service = ModelService(db)
     model = await service.get_latest_active(module_id)
     if not model:

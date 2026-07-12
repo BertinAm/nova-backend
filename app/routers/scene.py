@@ -7,12 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.logging_config import get_logger
 from app.models.user import User
 from app.rate_limit import limiter
 from app.schemas.scene import SceneDescribeResponse
 from app.services.scene_service import SceneService
 
 router = APIRouter(prefix="/scene", tags=["Scene Description"])
+logger = get_logger(__name__)
 
 MAX_IMAGE_SIZE = 512 * 1024  # 512 KB, per FR-03-03
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/jpg", "image/png"}
@@ -47,6 +49,10 @@ async def describe_scene(
     try:
         description = await service.describe(image_bytes, current_user.id)
     except Exception as exc:
+        # Logged with the real cause (bad key, deprecated model, rate limit,
+        # network) before collapsing to a generic client-facing message —
+        # otherwise every failure mode looks identical from the outside.
+        logger.exception("Scene description failed")
         raise HTTPException(503, "Scene description is unavailable right now") from exc
 
     return SceneDescribeResponse(description=description)

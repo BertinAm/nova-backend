@@ -86,7 +86,7 @@ class SceneDescriber:
                 "https://api.openai.com/v1/chat/completions",
                 headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
                 json={
-                    "model": "gpt-4-vision-preview",
+                    "model": "gpt-4o-mini",
                     "messages": [
                         {
                             "role": "user",
