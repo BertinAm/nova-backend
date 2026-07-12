@@ -16,6 +16,7 @@ from app.logging_config import audit_log
 from app.models.emergency_contact import EmergencyContact
 from app.models.enrolled_face import EnrolledFace
 from app.models.model_registry import ModelRegistry
+from app.models.training_sample import TrainingSample
 from app.models.usage_event import UsageEvent
 from app.models.user import User
 from app.models.user_feedback import UserFeedback
@@ -74,6 +75,14 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
             select(ModelRegistry.module_id).where(ModelRegistry.is_active.is_(True))
         )
     ).scalars().all()
+    total_training_samples = (
+        await db.execute(select(func.count(TrainingSample.id)))
+    ).scalar_one()
+    consented_users = (
+        await db.execute(
+            select(func.count(User.id)).where(User.data_collection_consent.is_(True))
+        )
+    ).scalar_one()
 
     return DashboardStats(
         total_users=total_users,
@@ -87,6 +96,8 @@ async def get_dashboard_stats(db: AsyncSession = Depends(get_db)):
         ),
         events_last_24h=events_24h,
         events_last_7d=events_7d,
+        total_training_samples=total_training_samples,
+        consented_users=consented_users,
         active_model_count=len(active_modules),
         module_ids_with_active_model=sorted(active_modules),
     )

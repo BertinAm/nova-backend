@@ -14,6 +14,8 @@ class DashboardStats(BaseModel):
     positive_feedback_pct: float | None
     events_last_24h: int
     events_last_7d: int
+    total_training_samples: int
+    consented_users: int
     active_model_count: int
     module_ids_with_active_model: list[str]
 

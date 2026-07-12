@@ -18,7 +18,16 @@ from app.logging_config import configure_logging, get_logger
 from app.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.ml.scene_describer import SceneDescriber
 from app.rate_limit import limiter
-from app.routers import admin, auth, emergency_contact, faces, logs, model_registry, scene
+from app.routers import (
+    admin,
+    auth,
+    emergency_contact,
+    faces,
+    logs,
+    model_registry,
+    scene,
+    training_data,
+)
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -69,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(model_registry.router)
     app.include_router(emergency_contact.router)
     app.include_router(admin.router)
+    app.include_router(training_data.router)
 
     @app.get("/admin", tags=["Admin Dashboard"], include_in_schema=False)
     async def admin_dashboard():

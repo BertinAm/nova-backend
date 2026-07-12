@@ -18,6 +18,11 @@ class User(Base):
     # Operator/admin accounts can manage the model registry (upload new
     # TFLite versions). Regular BVI users are never operators.
     is_operator: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Opt-in only: whether this user allows low-confidence/error/negative-
+    # feedback frames to be uploaded (to Hugging Face) for future model
+    # retraining. Off by default — the app must never capture or send
+    # images without this being explicitly set true by the user.
+    data_collection_consent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
     updated_at: Mapped[DateTime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False

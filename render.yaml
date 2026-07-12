@@ -38,6 +38,12 @@ services:
         sync: false
       - key: MODEL_STORAGE_PATH
         value: /tmp/models
+      # Set manually in the dashboard (Hugging Face write token for the
+      # unixio account) — sync: false so it's never overwritten or
+      # required at blueprint-sync time. Training-data uploads fail
+      # closed (503) if this is unset, rather than silently dropping.
+      - key: HF_TOKEN
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
       - key: PYTHON_VERSION

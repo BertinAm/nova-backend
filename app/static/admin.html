@@ -542,6 +542,7 @@ const SI = {
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>',
   thumb: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 22V11M2 13v7a2 2 0 0 0 2 2h12.5a2 2 0 0 0 2-1.6l1.4-7A2 2 0 0 0 18 11h-5l1-5a2 2 0 0 0-2-2.3L7 11"/></svg>',
   box: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3.5"/></svg>',
 };
 
 // ── SVG line/area chart ──────────────────────────────────────────
@@ -635,6 +636,7 @@ async function loadOverview() {
     statCard('Events (7d)', s.events_last_7d, '', false, SI.clock),
     statCard('Feedback', s.total_feedback, s.positive_feedback_pct != null ? s.positive_feedback_pct + '% positive' : 'none yet', (s.positive_feedback_pct || 0) >= 50, SI.thumb),
     statCard('Active Models', s.active_model_count, s.module_ids_with_active_model.join(', ') || 'none registered', false, SI.box),
+    statCard('Training Samples', s.total_training_samples, `${s.consented_users} user${s.consented_users === 1 ? '' : 's'} opted in`, s.total_training_samples > 0, SI.camera),
   ].join('');
 
   const daily = await api('/admin/stats/daily-events?days=14');

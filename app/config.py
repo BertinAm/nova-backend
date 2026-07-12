@@ -56,6 +56,14 @@ class Settings(BaseSettings):
     FACE_MATCH_THRESHOLD: float = 0.75
     ON_DEVICE_GALLERY_LIMIT: int = 20
 
+    # --- Opt-in training-data collection ---
+    # Frames are forwarded to this Hugging Face dataset repo, never kept on
+    # Render's (ephemeral) disk. Empty HF_TOKEN disables uploads outright
+    # (fails closed, not open) rather than silently accepting and dropping.
+    HF_TOKEN: str = ""
+    TRAINING_DATA_HF_REPO: str = "unixio/nova-training-data"
+    TRAINING_DATA_MAX_BYTES: int = 5 * 1024 * 1024  # 5 MB per frame
+
     @property
     def async_database_url(self) -> str:
         """DATABASE_URL normalised for the async driver.
